@@ -86,9 +86,14 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
                 model_parser_copy = self.deepcopy()
                 exp_sample_node = deepcopy(node)
                 exp_sample_config = deepcopy(config)
-                # rendering mutates the node and the config
-                super(ModelParser, model_parser_copy) \
-                    .render_update(exp_sample_node, exp_sample_config)
+
+                model_parser_copy.populate(
+                    exp_sample_node,
+                    exp_sample_config,
+                    experimentally_parsed['refs'],
+                    experimentally_parsed['sources'],
+                    dict(experimentally_parsed['configs'])
+                )
 
                 result = _get_exp_sample_result(
                     exp_sample_node,
