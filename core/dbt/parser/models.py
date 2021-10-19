@@ -42,6 +42,7 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
         experimentally_parsed: Optional[Union[str, Dict[str, List[Any]]]] = None
         config_call_dict: Dict[str, Any] = {}
         source_calls: List[List[str]] = []
+        result: List[str] = []
 
         # run the experimental parser if the flag is on or if we're sampling
         if flags.USE_EXPERIMENTAL_PARSER or sample:
@@ -80,7 +81,7 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
         # normal dbt run
         if not flags.USE_EXPERIMENTAL_PARSER:
             # if we're sampling, compare for correctness
-            if sample:
+            if sample and isinstance(experimentally_parsed, dict):
                 # if this will _never_ mutate anything `self` we could avoid these deep copies,
                 # but we can't really guarantee that going forward.
                 model_parser_copy = self.deepcopy()
@@ -93,13 +94,6 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
                     experimentally_parsed['refs'],
                     experimentally_parsed['sources'],
                     dict(experimentally_parsed['configs'])
-                )
-
-                result = _get_exp_sample_result(
-                    exp_sample_node,
-                    exp_sample_config,
-                    node,
-                    config,
                 )
 
                 # fire a tracking event. this fires one event for every sample
@@ -116,6 +110,15 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
 
             # normal rendering
             super().render_update(node, config)
+
+            # now that the sample is populated and the current values are rendered,
+            # compare the two and collect the tracking messages
+            result += _get_exp_sample_result(
+                exp_sample_node,
+                exp_sample_config,
+                node,
+                config,
+            )
 
         # if the --use-experimental-parser flag was set, and the experimental parser succeeded
         elif isinstance(experimentally_parsed, Dict):
