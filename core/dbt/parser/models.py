@@ -96,18 +96,6 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
                     dict(experimentally_parsed['configs'])
                 )
 
-                # fire a tracking event. this fires one event for every sample
-                # so that we have data on a per file basis. Not only can we expect
-                # no false positives or misses, we can expect the number model
-                # files parseable by the experimental parser to match our internal
-                # testing.
-                if tracking.active_user is not None:  # None in some tests
-                    tracking.track_experimental_parser_sample({
-                        "project_id": self.root_project.hashed_name(),
-                        "file_id": utils.get_hash(node),
-                        "status": result
-                    })
-
             # normal rendering
             super().render_update(node, config)
 
@@ -153,6 +141,18 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
                 f"1602: parser fallback to jinja because of extractor failure for {node.path}"
             )
             super().render_update(node, config)
+
+        # fire a tracking event. this fires one event for every sample
+        # so that we have data on a per file basis. Not only can we expect
+        # no false positives or misses, we can expect the number model
+        # files parseable by the experimental parser to match our internal
+        # testing.
+        if result and tracking.active_user is not None:  # None in some tests
+            tracking.track_experimental_parser_sample({
+                "project_id": self.root_project.hashed_name(),
+                "file_id": utils.get_hash(node),
+                "status": result
+            })
 
     # checks for banned macros
     def _has_banned_macro(
