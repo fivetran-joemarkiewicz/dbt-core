@@ -131,7 +131,11 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
 
         # the experimental parser didn't run on this model.
         # fall back to python jinja rendering.
-        elif experimentally_parsed in ["has_banned_macro"]:
+        if isinstance(experimentally_parsed, str):
+            if experimentally_parsed == "cannot_parse":
+                result += ["01_stable_parser_cannot_parse"]
+            elif experimentally_parsed == "has_banned_macro":
+                result += ["08_has_banned_macro"]
             # not logging here since the reason should have been logged above
             super().render_update(node, config)
         # the experimental parser ran on this model and failed.
