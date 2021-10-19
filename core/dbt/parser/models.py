@@ -84,7 +84,7 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
             if sample and isinstance(experimentally_parsed, dict):
                 # if this will _never_ mutate anything `self` we could avoid these deep copies,
                 # but we can't really guarantee that going forward.
-                model_parser_copy = self.deepcopy()
+                model_parser_copy = self.partial_deepcopy()
                 exp_sample_node = deepcopy(node)
                 exp_sample_config = deepcopy(config)
 
@@ -205,11 +205,11 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
         # configs don't need to be merged into the node because they
         # are read from config._config_call_dict
 
-    # for whatever reason this works when `deepcopy(self) does not.`
-    def deepcopy(self):
+    # the manifest is often huge so this method avoids deepcopying it
+    def partial_deepcopy(self):
         return ModelParser(
             deepcopy(self.project),
-            deepcopy(self.manifest),
+            self.manifest,
             deepcopy(self.root_project)
         )
 
