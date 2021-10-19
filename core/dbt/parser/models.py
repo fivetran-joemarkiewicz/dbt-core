@@ -96,18 +96,6 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
                     dict(experimentally_parsed['configs'])
                 )
 
-            # normal rendering
-            super().render_update(node, config)
-
-            # now that the sample is populated and the current values are rendered,
-            # compare the two and collect the tracking messages
-            result += _get_exp_sample_result(
-                exp_sample_node,
-                exp_sample_config,
-                node,
-                config,
-            )
-
         # if the --use-experimental-parser flag was set, and the experimental parser succeeded
         elif isinstance(experimentally_parsed, Dict):
             # manually fit configs in
@@ -127,20 +115,29 @@ class ModelParser(SimpleSQLParser[ParsedModelNode]):
 
         # the experimental parser didn't run on this model.
         # fall back to python jinja rendering.
-        if isinstance(experimentally_parsed, str):
+        elif isinstance(experimentally_parsed, str):
             if experimentally_parsed == "cannot_parse":
                 result += ["01_stable_parser_cannot_parse"]
             elif experimentally_parsed == "has_banned_macro":
                 result += ["08_has_banned_macro"]
             # not logging here since the reason should have been logged above
-            super().render_update(node, config)
-        # the experimental parser ran on this model and failed.
-        # fall back to python jinja rendering.
-        else:
             logger.debug(
-                f"1602: parser fallback to jinja because of extractor failure for {node.path}"
+                f"1602: parser fallback to jinja for {node.path}"
             )
             super().render_update(node, config)
+        # otherwise jinja rendering.
+        else:
+            super().render_update(node, config)
+
+        if sample:
+            # now that the sample is populated and the current values are rendered,
+            # compare the two and collect the tracking messages
+            result += _get_exp_sample_result(
+                exp_sample_node,
+                exp_sample_config,
+                node,
+                config,
+            )
 
         # fire a tracking event. this fires one event for every sample
         # so that we have data on a per file basis. Not only can we expect
