@@ -29,11 +29,10 @@ class VersionSpecification(dbtClassMixin):
     build: Optional[str] = None
     matcher: Matchers = Matchers.EXACT
 
-
 _MATCHERS = r"(?P<matcher>\>=|\>|\<|\<=|=)?"
-_NUM_NO_LEADING_ZEROS = r"(0|[1-9][0-9]*)"
+_NUM_NO_LEADING_ZEROS = r"(0|[1-9]\d*)"
 _ALPHA = r"[0-9A-Za-z-]*"
-_ALPHA_NO_LEADING_ZEROS = r"(0|[1-9A-Za-z-][0-9A-Za-z-]*)"
+_ALPHA_NO_LEADING_ZEROS = r"(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
 
 _BASE_VERSION_REGEX = r"""
 (?P<major>{num_no_leading_zeros})\.
@@ -95,7 +94,7 @@ class VersionSpecifier(VersionSpecification):
 
         if not match:
             raise dbt.exceptions.SemverException(
-                'Could not parse version "{}"'.format(version_string)
+                '"{}" is not a valid semantic version.'.format(version_string)
             )
 
         matched = {k: v for k, v in match.groupdict().items() if v is not None}
@@ -426,6 +425,13 @@ def resolve_to_specific_version(requested_range, available_versions):
 
     return max_version_string
 
+def semver_regex_versioning(versions: List[str]) -> bool:
+    for version_string in versions:
+        try:
+            VersionSpecifier.from_version_string(version_string)
+        except Exception:
+                return False
+    return True
 
 def filter_installable(versions: List[str], install_prerelease: bool) -> List[str]:
     installable = []
