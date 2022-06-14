@@ -29,6 +29,7 @@ class VersionSpecification(dbtClassMixin):
     build: Optional[str] = None
     matcher: Matchers = Matchers.EXACT
 
+
 _MATCHERS = r"(?P<matcher>\>=|\>|\<|\<=|=)?"
 _NUM_NO_LEADING_ZEROS = r"(0|[1-9]\d*)"
 _ALPHA = r"[0-9A-Za-z-]*"
@@ -425,13 +426,15 @@ def resolve_to_specific_version(requested_range, available_versions):
 
     return max_version_string
 
+
 def semver_regex_versioning(versions: List[str]) -> bool:
     for version_string in versions:
         try:
             VersionSpecifier.from_version_string(version_string)
         except Exception:
-                return False
+            return False
     return True
+
 
 def filter_installable(versions: List[str], install_prerelease: bool) -> List[str]:
     installable = []
