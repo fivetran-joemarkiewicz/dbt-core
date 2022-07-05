@@ -1,11 +1,19 @@
 import unittest
 import itertools
 
+from typing import List
 from dbt.exceptions import VersionsNotCompatibleException
 from dbt.semver import VersionSpecifier, UnboundedVersionSpecifier, \
     VersionRange, reduce_versions, versions_compatible, \
-    resolve_to_specific_version, filter_installable, semver_regex_versioning
+    resolve_to_specific_version, filter_installable
 
+def semver_regex_versioning(versions: List[str]) -> bool:
+    for version_string in versions:
+        try:
+            VersionSpecifier.from_version_string(version_string)
+        except Exception:
+            return False
+    return True
 
 def create_range(start_version_string, end_version_string):
     start = UnboundedVersionSpecifier()

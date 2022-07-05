@@ -95,7 +95,7 @@ class VersionSpecifier(VersionSpecification):
 
         if not match:
             raise dbt.exceptions.SemverException(
-                '"{}" is not a valid semantic version.'.format(version_string)
+                f'"{version_string}" is not a valid semantic version.'
             )
 
         matched = {k: v for k, v in match.groupdict().items() if v is not None}
@@ -425,15 +425,6 @@ def resolve_to_specific_version(requested_range, available_versions):
             max_version_string = version_string
 
     return max_version_string
-
-
-def semver_regex_versioning(versions: List[str]) -> bool:
-    for version_string in versions:
-        try:
-            VersionSpecifier.from_version_string(version_string)
-        except Exception:
-            return False
-    return True
 
 
 def filter_installable(versions: List[str], install_prerelease: bool) -> List[str]:
